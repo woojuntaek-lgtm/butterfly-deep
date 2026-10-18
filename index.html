@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c1a14">
+<title>나비와 깊은 물</title>
+<meta name="description" content="깊은 물이라야 큰 고기가 난다 — 30초 깊은 물 낚시 게임, 갓 사러 갔다가 망건 사지 않는 집중 타이머, 활력 계기판. 에니어그램 7번(낙천가) 이야기로 만든 앱">
+<style>
+:root{--bg:#0c1a14;--card:#13261d;--card2:#1a3226;--fg:#eef8f0;--mut:#a5c2ae;--line:#2c4a39;
+--green:#5fd38a;--lime:#c6f06a;--sun:#ffb84d;--fire:#ff7a45;--water:#3aa0c8;--deep:#0d3b5c;--ok:#7ee0a0;--bad:#ff8a7a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;line-height:1.55}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:12px 14px 40px}
+h1{font-size:1.2rem;margin:6px 0}
+h1 small{display:block;font-size:.76rem;color:var(--mut);font-weight:400}
+.tabs{display:flex;gap:5px;margin:10px 0}
+.tabs button{flex:1;padding:9px 2px;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:10px;font-size:.84rem;font-weight:600}
+.tabs button.on{background:#235238;color:#fff;border-color:#5fd38a}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+h2{font-size:1rem;margin:2px 0 8px}
+.note{font-size:.86rem;color:var(--mut);margin:8px 0 0}
+.note b{color:var(--fg)}
+.btn{padding:12px 14px;border-radius:12px;border:0;background:linear-gradient(135deg,#2f9a5c,#c6f06a);color:#0c1a14;font-weight:800;font-size:.95rem;flex:1}
+.btn.sec{background:var(--card2);border:1px solid var(--line);color:var(--fg);font-weight:700}
+.btn.sm{flex:none;padding:7px 11px;font-size:.82rem}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=text]{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:1rem;font-family:inherit}
+label.f{display:block;font-size:.86rem;color:var(--mut);margin:12px 0 4px}
+canvas{display:block;width:100%;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:6px}
+.tbar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.tbar div{height:100%;background:var(--sun);transition:width .2s linear}
+.big{font-size:2.1rem;text-align:center;margin:6px 0;font-weight:800}
+.exp{margin-top:10px;font-size:.9rem;background:#173326;border-left:3px solid var(--green);padding:9px 11px;border-radius:6px}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.st{background:var(--card2);border-radius:10px;padding:8px;text-align:center}
+.st .t{font-size:.72rem;color:var(--mut)}
+.st .v{font-size:1.15rem;font-weight:800;font-variant-numeric:tabular-nums}
+/* focus */
+.ring{position:relative;width:200px;height:200px;margin:8px auto}
+.ring svg{width:200px;height:200px;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring .tm{font-size:2rem;font-weight:800;font-variant-numeric:tabular-nums}
+.ring .gl{font-size:.82rem;color:var(--mut);max-width:150px;word-break:break-all}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:.85rem}
+.seg button.on{border-color:var(--green);background:#235238}
+.later{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.later div{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--card2);border-radius:10px;padding:8px 10px;font-size:.9rem}
+.later div span{word-break:break-all}
+/* check */
+.prog{font-size:.8rem;color:var(--mut)}
+.pbar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin:6px 0 12px}
+.pbar div{height:100%;background:linear-gradient(90deg,#2f9a5c,#ffb84d);transition:width .25s}
+.qtext{font-size:1.05rem;font-weight:600;min-height:3.2em;margin:4px 0 12px}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.likert button{padding:12px 0 8px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font-size:1.05rem;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px}
+.likert button span{font-size:.62rem;color:var(--mut);font-weight:400}
+.likert button.sel{border-color:var(--green);background:#235238}
+.bars{display:flex;flex-direction:column;gap:12px;margin:6px 0}
+.bb .bl{display:flex;justify-content:space-between;font-size:.86rem;margin-bottom:4px}
+.bb .bt{height:14px;border-radius:7px;background:var(--card2);overflow:hidden}
+.bb .bt div{height:100%;border-radius:7px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.verdict{text-align:center;font-size:1.3rem;font-weight:800;margin:12px 0 2px}
+.vsub{text-align:center;color:var(--mut);font-size:.9rem}
+.rx{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.rx div{background:var(--card2);border-radius:10px;padding:10px 12px;font-size:.92rem;border-left:3px solid var(--sun)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:999px;font-size:.9rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+.info h3{font-size:.98rem;margin:14px 0 4px;color:#d7f7c2}
+.info p{margin:4px 0;font-size:.92rem}
+.info ul{margin:4px 0;padding-left:20px;font-size:.92rem}
+.tagc{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.tagc span{font-size:.8rem;padding:3px 9px;border-radius:999px;background:#235238;border:1px solid #3f7a55}
+.arrow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center;font-size:.88rem;margin:6px 0}
+.arrow .box{background:var(--card2);border-radius:10px;padding:8px}
+a{color:#c6f06a}
+footer{text-align:center;color:var(--mut);font-size:.78rem;margin-top:18px}
+footer a{color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🦋 나비와 깊은 물<small>깊은 물이라야 큰 고기가 난다 — 즐거움을 오래 누리는 법</small></h1>
+<div class="tabs">
+  <button class="on" data-tab="fish">깊은 물 낚시</button>
+  <button data-tab="focus">오늘의 갓</button>
+  <button data-tab="check">활력 계기판</button>
+  <button data-tab="info">7번 한눈에</button>
+</div>
+
+<!-- ===== 깊은 물 낚시 ===== -->
+<section id="tab-fish">
+  <div class="card" id="fIntro">
+    <h2>🎣 깊은 물 낚시 — 30초</h2>
+    <div class="exp" style="margin-top:0">🐟 <b>얕은 물</b>의 작은 물고기 — 톡 누르면 바로 +1<br>🐋 <b>깊은 물</b>의 큰 고기 — 그림자를 <b>꾹 누른 채 3초</b> 버티면 +12<br>🦋 나비는 그냥 예쁜 손님 — 눌러도 점수는 없어요</div>
+    <p class="note">작은 즐거움을 쉴 새 없이 누를 수도, 한 마리에 머물러 큰 고기를 낚을 수도 있습니다. 어떤 낚시꾼이 될까요?</p>
+    <div class="row" style="margin-top:12px"><button class="btn" id="fStart">낚시 시작!</button></div>
+    <p class="note" id="fBest"></p>
+  </div>
+  <div class="card" id="fPlay" hidden>
+    <div class="hud"><span id="fScore">0점</span><span id="fCount" style="font-size:.85rem;color:var(--mut)"></span></div>
+    <div class="tbar"><div id="fTime" style="width:100%"></div></div>
+    <canvas id="fc" width="600" height="760"></canvas>
+  </div>
+  <div class="card" id="fEnd" hidden></div>
+</section>
+
+<!-- ===== 오늘의 갓 ===== -->
+<section id="tab-focus" hidden>
+  <div class="card">
+    <h2>🎩 갓 사러 갔다가 망건 사지 않기</h2>
+    <p class="note" style="margin-top:0">오늘 꼭 할 <b>한 가지(갓)</b>를 정하고 타이머를 켜세요. 도중에 떠오르는 다른 재미있는 생각(<b>망건</b>)은 지우지 말고 <b>나중 상자</b>에 넣어 두면 됩니다. 버리는 게 아니라 잠시 맡겨 두는 것 — 7번의 미덕, <b>절제</b>입니다.</p>
+    <label class="f" for="goal">오늘의 갓 (한 가지만)</label>
+    <input type="text" id="goal" maxlength="40" placeholder="예: 기획서 1페이지 쓰기">
+    <div class="seg" style="margin-top:10px" id="mins"><button data-m="10">10분</button><button data-m="15" class="on">15분</button><button data-m="25">25분</button><button data-m="45">45분</button></div>
+    <div class="ring"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" stroke="#1a3226" stroke-width="14" fill="none"/><circle id="arc" cx="100" cy="100" r="88" stroke="#5fd38a" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0"/></svg><div class="c"><div class="tm" id="tm">15:00</div><div class="gl" id="gl">갓을 정해 주세요</div></div></div>
+    <div class="row"><button class="btn" id="tGo">시작</button><button class="btn sec" id="tStop">멈춤</button></div>
+    <label class="f" for="mg">🦋 지금 떠오른 망건 (다른 재미있는 생각)</label>
+    <div class="row" style="flex-wrap:nowrap"><input type="text" id="mg" maxlength="40" placeholder="예: 주말 캠핑 검색, 새 앱 구경"><button class="btn sm" id="mgAdd" style="padding:11px 14px">맡기기</button></div>
+    <div class="later" id="later"></div>
+    <div class="stat"><div class="st"><div class="t">끝까지 산 갓</div><div class="v" id="sDone">0</div></div><div class="st"><div class="t">맡겨 둔 망건</div><div class="v" id="sLater">0</div></div><div class="st"><div class="t">집중한 시간</div><div class="v" id="sMin">0분</div></div></div>
+    <p class="note">집중이 끝나면 나중 상자를 열어 보세요. 아까 그렇게 급해 보이던 망건이 생각보다 덜 급한 경우가 많습니다. 기록은 이 기기에만 저장됩니다.</p>
+  </div>
+</section>
+
+<!-- ===== 활력 계기판 ===== -->
+<section id="tab-check" hidden>
+  <div class="card" id="kIntro">
+    <h2>🌋 나의 활력 계기판</h2>
+    <p style="margin:0">문장 12개를 읽고, 요즘의 나와 얼마나 비슷한지 1~5로 눌러 주세요.</p>
+    <p class="note">세 가지를 봅니다 — <b>활력</b>(즐거움을 찾는 힘), <b>탐닉</b>(산만함·고통 회피), <b>절제</b>(한 곳에 머무는 힘). 유형 진단이 아니라 누구나 해 볼 수 있는 "즐거움 습관" 점검입니다.</p>
+    <div class="row" style="margin-top:12px"><button class="btn" id="kStart">시작하기</button></div>
+    <p class="note" id="kLast"></p>
+  </div>
+  <div class="card" id="kQ" hidden>
+    <div class="prog" id="kProg"></div>
+    <div class="pbar"><div id="kBar"></div></div>
+    <div class="qtext" id="kText"></div>
+    <div class="likert" id="kLik"></div>
+    <div class="row" style="margin-top:12px"><button class="btn sec" id="kBack">← 이전</button></div>
+  </div>
+  <div class="card" id="kRes" hidden>
+    <div class="bars" id="kBars"></div>
+    <div class="verdict" id="vTitle"></div>
+    <div class="vsub" id="vSub"></div>
+    <div class="rx" id="rx"></div>
+    <div class="row" style="margin-top:14px"><button class="btn sec" id="kShare">결과 복사</button><button class="btn" id="kAgain">다시 재기</button></div>
+    <p class="note">이 점검은 성찰을 돕는 참고용이며 심리검사나 전문 상담을 대신하지 않습니다. 내 에니어그램 유형이 궁금하다면 <a href="https://woojuntaek-lgtm.github.io/enneagram-quick/" target="_blank" rel="noopener">에니어그램 빠른 체크</a>를 해 보세요.</p>
+  </div>
+</section>
+
+<!-- ===== 7번 한눈에 ===== -->
+<section id="tab-info" hidden>
+  <div class="card info">
+    <h2>🦋 에니어그램 7번 · 낙천가</h2>
+    <p><b>삶의 즐거움을 찾는 사람.</b> "이거 재밌겠다!" 모임에 오면 분위기가 달라지고, 즐거운 일이 끝나면 어느새 다음 즐거움을 찾아 떠나 있습니다.</p>
+    <div class="tagc"><span>사고형(머리 중심) 5·6·7</span><span>순응형 — 흐름을 탐</span><span>미덕: 절제</span><span>악덕: 탐닉</span><span>상징: 나비·그린</span></div>
+    <h3>사고형 안에서의 자리</h3>
+    <p>머리 중심인 5·6·7번 가운데, 산만해 보이지만 <b>두뇌 회전이 현란한</b> 유형입니다. 생각이 늘 즐거운 가능성 쪽으로 향합니다.</p>
+    <h3>동양 수리로 보면 — 화산 같은 불(火)</h3>
+    <p>숫자 7은 양의 불(火). <b>거침없는 화산</b> 같은 불이지만, <b>속이 비기 쉬운</b> 불이기도 합니다.</p>
+    <h3>동심과 활력</h3>
+    <p>다재다능하고 동심이 살아 있는 사람. 상징 동물은 나비, 색은 그린입니다.</p>
+    <h3>두려움과 바람</h3>
+    <p>가장 두려운 것은 <b>고통과 결핍 속에 갇히는 것</b>. 그래서 고통을 피하고 합리화하기 쉽습니다.</p>
+    <h3>흐름을 타는 순응형</h3>
+    <p>흐름을 타며 관계를 잇고, <b>미래는 항상 즐거움뿐</b>이라고 믿습니다.</p>
+    <h3>같은 활력, 두 얼굴</h3>
+    <div class="arrow"><div class="box">🌿 절제<br><small>즐거움을 깊이 누리고, 한 곳에 머무를 줄 앎</small></div><div>↔</div><div class="box">🍭 탐닉<br><small>갓 사러 갔다가 망건 산다 — 다음 즐거움으로 계속 이동</small></div></div>
+    <p>빛은 <b>영원한 미소</b>, 그림자는 <b>흔적 없이 떠남</b>입니다.</p>
+    <h3>나는 무엇을 피하고 있을까</h3>
+    <p><b>깊은 물이라야 큰 고기가 난다.</b> 즐거움 뒤로 피하고 있는 것은 없는지, 한 번 머물러 들여다보는 것이 시작입니다.</p>
+    <h3>날개</h3>
+    <ul><li><b>7w6</b> — 6번 쪽 날개, 사람들과 어울리며 책임감도 챙기는 쪽</li><li><b>7w8</b> — 8번 쪽 날개, 추진력 있고 거침없는 쪽</li></ul>
+    <h3>스트레스와 성장</h3>
+    <div class="arrow"><div class="box">스트레스 → <b>1번처럼</b><br><small>날카롭고 비판적으로 변함</small></div><div>·</div><div class="box">성장 → <b>5번처럼</b><br><small>한 가지를 깊이 파고들며 차분해짐</small></div></div>
+    <h3>7번과 잘 지내려면</h3>
+    <ul><li>새로운 아이디어에 먼저 <b>함께 즐거워해</b> 주세요.</li><li>무거운 이야기는 <b>짧고 분명하게</b>, 하지만 피하지 않게 도와주세요.</li><li>약속을 끝까지 지켰을 때 <b>그 과정을 알아봐</b> 주세요.</li></ul>
+    <p class="note">7번으로 추정되는 인물과 "달콤함을 쫓는 7번에게 건네는 말"은 영상에서 확인해 주세요.</p>
+    <p class="note" style="text-align:center;margin-top:14px">유형은 사람을 가두는 상자가 아니라 지금 서 있는 곳을 알려 주는 지도입니다.</p>
+  </div>
+</section>
+
+<footer>© 2026 정필 수심명 · <a href="https://blog.naver.com/omyman" target="_blank" rel="noopener">blog.naver.com/omyman</a><br>「에니어그램 7번 낙천가」 부록 [Psyche 09] · 인터넷 없이 동작</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const URL_='https://woojuntaek-lgtm.github.io/butterfly-deep/';
+const store={get(k,d){try{const v=localStorage.getItem('bfly_'+k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem('bfly_'+k,JSON.stringify(v));}catch(e){}}};
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800);}
+async function copy(t){try{await navigator.clipboard.writeText(t);toast('복사했습니다');}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('복사했습니다');}catch(_){toast('복사에 실패했습니다');}a.remove();}}
+const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n);}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function prep(cv,ratio){const dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth||360,h=Math.round(w*ratio);
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=w*dpr;cv.height=h*dpr;cv.style.height=h+'px';}
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);return {c,w,h};}
+function E(c,s,x,y,size){c.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(s,x,y);}
+
+/* ===== 깊은 물 낚시 ===== */
+const GT=30000,HOLD=3000;
+let G=null;const fc=$('#fc');
+function fBest(){const b=store.get('fbest',null);$('#fBest').textContent=b?`최고 기록 ${b.s}점 (작은 물고기 ${b.a} · 큰 고기 ${b.b})`:'';}
+fBest();
+function gStart(){G={t0:performance.now(),score:0,small:[],bigs:[],flies:[],shallow:0,deep:0,hold:null,pops:[],lt:0,over:false,nextS:0,nextB:600,nextF:2000,fails:0};
+  $('#fIntro').hidden=true;$('#fEnd').hidden=true;$('#fPlay').hidden=false;requestAnimationFrame(gLoop);}
+function geo(){const w=fc.clientWidth||360,h=Math.round(w*1.26);return {w,h,surf:h*0.08,mid:h*0.45};}
+function gLoop(ts){if(!G||G.over)return;const dt=G.lt?Math.min(.05,(ts-G.lt)/1000):0;G.lt=ts;const el=ts-G.t0;
+  const {c,w,h}=prep(fc,1.26),surf=h*0.08,mid=h*0.45;
+  // spawn
+  G.nextS-=dt*1000;if(G.nextS<=0){G.nextS=380+Math.random()*420;if(G.small.length<7){const L=Math.random()<.5;G.small.push({x:L?-20:w+20,dir:L?1:-1,y:surf+20+Math.random()*(mid-surf-40),v:(60+Math.random()*80),age:0,emo:['🐟','🐠','🐡'][Math.random()*3|0]});}}
+  G.nextB-=dt*1000;if(G.nextB<=0&&G.bigs.length<2){G.nextB=2500+Math.random()*2500;G.bigs.push({x:w*(0.2+Math.random()*0.6),y:mid+(h-mid)*(0.3+Math.random()*0.5),age:0,life:6.5});}
+  G.nextF-=dt*1000;if(G.nextF<=0){G.nextF=2200+Math.random()*2000;G.flies.push({x:-20,y:surf+30+Math.random()*(h-surf-60),t:0,s:70+Math.random()*50});}
+  // background
+  const gr=c.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#bfe9ff');gr.addColorStop(0.08,'#5cc3e8');gr.addColorStop(0.45,'#2a86b8');gr.addColorStop(0.46,'#1a5b88');gr.addColorStop(1,'#071f36');
+  c.fillStyle=gr;c.fillRect(0,0,w,h);
+  c.fillStyle='rgba(255,255,255,.75)';c.font='bold 12px -apple-system,"Malgun Gothic",sans-serif';c.textAlign='left';c.fillText('얕은 물 · 톡!',8,surf+14);c.fillText('깊은 물 · 꾹 3초',8,mid+16);
+  c.strokeStyle='rgba(255,255,255,.25)';c.setLineDash([6,6]);c.beginPath();c.moveTo(0,mid);c.lineTo(w,mid);c.stroke();c.setLineDash([]);
+  // big fish shadows
+  G.bigs.forEach(b=>{b.age+=dt;const a=Math.min(1,b.age/0.6,(b.life-b.age)/0.6);c.globalAlpha=Math.max(0,a)*0.9;
+    c.fillStyle='rgba(0,0,0,.45)';c.beginPath();c.ellipse(b.x,b.y,52,24,0,0,7);c.fill();c.globalAlpha=Math.max(0,a);E(c,'🐋',b.x+Math.sin(b.age*2)*4,b.y,44);c.globalAlpha=1;});
+  G.bigs=G.bigs.filter(b=>b.age<b.life||(G.hold&&G.hold.b===b));
+  // hold progress
+  if(G.hold){const hb=G.hold,k=Math.min(1,(ts-hb.t)/HOLD);
+    c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.beginPath();c.moveTo(hb.b.x,0);c.lineTo(hb.b.x,hb.b.y-28);c.stroke();
+    c.strokeStyle='#ffb84d';c.lineWidth=7;c.beginPath();c.arc(hb.b.x,hb.b.y,48,-Math.PI/2,-Math.PI/2+k*Math.PI*2);c.stroke();
+    if(k>=1){G.score+=12;G.deep++;G.pops.push({x:hb.b.x,y:hb.b.y-40,t:0,s:'+12 큰 고기!',c:'#ffd27a'});G.bigs=G.bigs.filter(b=>b!==hb.b);G.hold=null;vib([30,40,60]);}}
+  // small fish
+  G.small.forEach(f=>{f.x+=f.dir*f.v*dt;f.age+=dt;E(c,f.emo,f.x,f.y+Math.sin(f.age*4)*3,26);});
+  G.small=G.small.filter(f=>f.x>-40&&f.x<w+40);
+  // butterflies
+  G.flies.forEach(b=>{b.t+=dt;b.x+=b.s*dt;b.y+=Math.sin(b.t*3)*0.8;E(c,'🦋',b.x,b.y,24+Math.sin(b.t*10)*3);});
+  G.flies=G.flies.filter(b=>b.x<w+30);
+  // pops
+  G.pops.forEach(p=>{p.t+=dt;c.globalAlpha=Math.max(0,1-p.t/0.9);c.fillStyle=p.c;c.font='bold 15px -apple-system,"Malgun Gothic",sans-serif';c.textAlign='center';c.fillText(p.s,p.x,p.y-p.t*30);c.globalAlpha=1;});
+  G.pops=G.pops.filter(p=>p.t<0.9);
+  // hud
+  const left=Math.max(0,GT-el);$('#fTime').style.width=(left/GT*100)+'%';$('#fScore').textContent=G.score+'점';$('#fCount').textContent=`🐟 ${G.shallow} · 🐋 ${G.deep}`;
+  if(left<=0){gOver();return;}
+  requestAnimationFrame(gLoop);}
+function pt(e){const r=fc.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+fc.addEventListener('pointerdown',e=>{if(!G||G.over)return;e.preventDefault();const [x,y]=pt(e);
+  // big fish hold?
+  const b=G.bigs.find(b=>Math.hypot(b.x-x,b.y-y)<55);
+  if(b){if(G.hold)return;G.hold={b,t:performance.now(),id:e.pointerId};try{fc.setPointerCapture(e.pointerId);}catch(_){} vib(8);return;}
+  const f=G.small.find(f=>Math.hypot(f.x-x,f.y-y)<28);
+  if(f){G.small=G.small.filter(q=>q!==f);G.score+=1;G.shallow++;G.pops.push({x:f.x,y:f.y,t:0,s:'+1',c:'#c6f06a'});vib(6);
+    if(G.hold){G.hold=null;G.fails++;G.pops.push({x:x,y:y-24,t:0,s:'큰 고기가 달아났어요',c:'#ff8a7a'});}return;}
+  const bf=G.flies.find(q=>Math.hypot(q.x-x,q.y-y)<30);
+  if(bf){G.flies=G.flies.filter(q=>q!==bf);G.pops.push({x:bf.x,y:bf.y,t:0,s:'🦋 예쁘다!',c:'#fff'});}
+});
+const release=e=>{if(G&&G.hold&&e.pointerId===G.hold.id){G.hold=null;G.fails++;toast('조금만 더 버티면 큰 고기였는데!');}};
+fc.addEventListener('pointerup',release);fc.addEventListener('pointercancel',release);
+function gOver(){G.over=true;const s=G.score,a=G.shallow,b=G.deep;const best=store.get('fbest',null);if(!best||s>best.s)store.set('fbest',{s,a,b});
+  let msg;
+  if(b===0) msg='🐟 작은 즐거움을 부지런히 낚았습니다! 그런데 큰 고기는 한 마리도 없네요. <b>깊은 물이라야 큰 고기가 난다</b> — 다음엔 그림자 하나에 3초만 머물러 보세요.';
+  else if(a>b*12) msg='🦋 바쁘게 즐거운 낚시! 큰 고기도 잡았지만 손이 자꾸 얕은 물로 갔어요. 한 마리에 머무는 시간이 늘면 점수도 커집니다.';
+  else msg='🐋 머물 줄 아는 낚시꾼! 작은 즐거움을 놓치지 않으면서도 큰 고기에 머물렀습니다 — 7번의 미덕, <b>절제</b>입니다.';
+  $('#fPlay').hidden=true;$('#fEnd').hidden=false;
+  $('#fEnd').innerHTML=`<h2>30초 끝!</h2><div class="big">${s}점</div><div class="stat"><div class="st"><div class="t">작은 물고기</div><div class="v">🐟 ${a}</div></div><div class="st"><div class="t">큰 고기</div><div class="v">🐋 ${b}</div></div><div class="st"><div class="t">놓친 큰 고기</div><div class="v">${G.fails}</div></div></div>
+   <div class="exp">${msg}</div><div class="row" style="margin-top:12px"><button class="btn sec" id="fShare">기록 복사</button><button class="btn" id="fRe">다시 하기</button></div>`;
+  $('#fRe').onclick=gStart;$('#fShare').onclick=()=>copy(`[나비와 깊은 물 · 낚시] ${s}점 (🐟${a} · 🐋${b})\n깊은 물이라야 큰 고기가 난다\n${URL_}`);fBest();}
+$('#fStart').onclick=gStart;window.__fishState=()=>G;
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&!G.over)gOver();});
+
+/* ===== 오늘의 갓 ===== */
+let mins=15,left=15*60,timer=null,fs=store.get('focus',{done:0,min:0,later:[]});
+$('#goal').value=store.get('goal','');
+function fsave(){store.set('focus',fs);}
+$$('#mins button').forEach(b=>b.onclick=()=>{if(timer)return;mins=+b.dataset.m;left=mins*60;$$('#mins button').forEach(x=>x.classList.toggle('on',x===b));drawT();});
+function drawT(){const m=Math.floor(left/60),s=left%60;$('#tm').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  $('#arc').setAttribute('stroke-dashoffset',String(553*(1-left/(mins*60))));
+  const g=$('#goal').value.trim();$('#gl').textContent=g?`🎩 ${g}`:'갓을 정해 주세요';}
+$('#goal').addEventListener('input',()=>{store.set('goal',$('#goal').value);drawT();});
+$('#tGo').onclick=()=>{if(!$('#goal').value.trim()){toast('오늘의 갓을 한 가지 적어 주세요');return;}if(timer)return;
+  const end=Date.now()+left*1000;$('#tGo').textContent='집중 중…';
+  timer=setInterval(()=>{left=Math.max(0,Math.round((end-Date.now())/1000));drawT();
+    if(left<=0){clearInterval(timer);timer=null;fs.done++;fs.min+=mins;fsave();renderF();vib([60,60,120]);$('#tGo').textContent='시작';left=mins*60;drawT();
+      toast(fs.later.length?'갓을 샀습니다! 이제 나중 상자를 열어 보세요 🦋':'갓을 샀습니다! 잘하셨어요 🎩');}},250);};
+$('#tStop').onclick=()=>{if(timer){clearInterval(timer);timer=null;const used=mins*60-left;fs.min+=Math.floor(used/60);fsave();renderF();}$('#tGo').textContent='시작';left=mins*60;drawT();};
+$('#mgAdd').onclick=()=>{const t=$('#mg').value.trim();if(!t){toast('떠오른 생각을 적어 주세요');return;}fs.later.unshift(t);fsave();$('#mg').value='';renderF();toast('나중 상자에 맡겼습니다. 다시 갓으로!');vib(10);};
+$('#mg').addEventListener('keydown',e=>{if(e.key==='Enter')$('#mgAdd').click();});
+function renderF(){$('#sDone').textContent=fs.done;$('#sLater').textContent=fs.later.length;$('#sMin').textContent=fs.min+'분';
+  $('#later').innerHTML=fs.later.map((t,i)=>`<div><span>🦋 ${esc(t)}</span><button class="btn sec sm" data-x="${i}">꺼내기</button></div>`).join('');
+  $$('#later [data-x]').forEach(b=>b.onclick=()=>{fs.later.splice(+b.dataset.x,1);fsave();renderF();});}
+renderF();drawT();
+
+/* ===== 활력 계기판 ===== */
+const Q=[
+ ['J','새로운 아이디어와 계획이 끊임없이 떠오른다.'],
+ ['I','한 가지 일이 지루해지면 금방 다른 일로 옮겨 간다.'],
+ ['R','재미없는 일도 끝까지 마무리하는 편이다.'],
+ ['J','모임에서 분위기를 띄우는 역할을 자주 맡는다.'],
+ ['I','속상한 일이 있으면 생각하기보다 다른 즐거운 일로 덮는다.'],
+ ['R','하고 싶은 것이 많아도 우선순위를 정해 하나씩 한다.'],
+ ['J','힘든 상황에서도 좋은 면을 먼저 찾는다.'],
+ ['I','계획이 너무 많아 시작만 하고 못 끝낸 일이 많다.'],
+ ['R','즐거움을 잠시 미루고 지금 할 일에 머물 수 있다.'],
+ ['J','다양한 분야에 관심이 많고 금방 배운다.'],
+ ['I','무거운 이야기가 나오면 화제를 돌리고 싶어진다.'],
+ ['R','한 가지를 깊이 파고드는 즐거움도 안다.']
+];
+const LAB=['전혀\n아니다','아니다','보통','그렇다','매우\n그렇다'];
+let ki=0,ans=[];
+function kShow(){$('#kProg').textContent=`${ki+1} / ${Q.length}`;$('#kBar').style.width=(ki/Q.length*100)+'%';$('#kText').textContent=Q[ki][1];
+  $('#kLik').innerHTML=LAB.map((l,k)=>`<button data-v="${k+1}" class="${ans[ki]===k+1?'sel':''}">${k+1}<span>${l.replace('\n','<br>')}</span></button>`).join('');
+  $$('#kLik button').forEach(b=>b.onclick=()=>{ans[ki]=+b.dataset.v;b.classList.add('sel');vib(10);setTimeout(()=>{if(ki<Q.length-1){ki++;kShow();}else kResult();},160);});
+  $('#kBack').disabled=ki===0;}
+const score=dim=>{let s=0,n=0;Q.forEach((q,i)=>{if(q[0]===dim){s+=ans[i]-1;n++;}});return Math.round(s/(4*n)*100);};
+function verdict(J,I,R){
+  if(I>=60&&I>=R) return {t:'🍭 망건 쇼핑 중',s:'즐거움이 다음 즐거움을 부르는 때 — 갓 사러 갔다가 망건을 사기 쉽습니다',c:'#ff8a7a'};
+  if(J>=55&&R>=55) return {t:'🦋 깊은 물의 나비',s:'즐거움을 찾으면서도 머물 줄 아는 사람 — 눈부신 활력과 절제',c:'#7ee0a0'};
+  if(J>=55) return {t:'🌋 속이 빈 화산',s:'불꽃은 거침없는데, 한 곳에 머무는 힘이 조금 얇아진 때',c:'#ffb84d'};
+  if(R>=55) return {t:'🌿 차분한 숲',s:'들뜨지 않고 한 가지를 깊이 누리는 중',c:'#3aa0c8'};
+  return {t:'🌥️ 잠시 흐린 하늘',s:'즐거움도 집중도 쉬어 가는 때 — 작은 즐거움 하나부터',c:'#a5c2ae'};}
+function rxList(J,I,R){const r=[];
+  if(I>=50) r.push('<b>갓 사러 갔다가 망건 사지 않기.</b> "오늘의 갓" 탭에서 한 가지를 정하고, 떠오르는 다른 재미는 나중 상자에 맡겨 보세요.');
+  if(I>=50) r.push('<b>나는 무엇을 피하고 있을까?</b> 즐거운 일로 덮어 둔 불편한 마음이 있다면, 5분만 머물러 바라봐 주세요.');
+  if(R<55) r.push('<b>깊은 물이라야 큰 고기가 난다.</b> 이번 주에 하나만 골라 끝까지 해 보세요 — 7번의 성장 방향(5번)입니다.');
+  if(J>=55&&I<50&&R>=55) r.push('<b>지금 그대로 좋습니다.</b> 활력과 절제가 함께하는 상태 — 즐거움을 오래 누리는 비결입니다.');
+  if(J<45) r.push('<b>작은 즐거움 하나를 허락하세요.</b> 좋아하는 음악 한 곡, 짧은 산책이면 충분합니다.');
+  r.push('<b>미래의 즐거움만큼 지금의 즐거움도.</b> 계획을 세우는 즐거움만큼, 지금 하고 있는 일에서 즐거움을 찾아보세요.');
+  return r.slice(0,4);}
+function kResult(){const J=score('J'),I=score('I'),R=score('R'),v=verdict(J,I,R);
+  $('#kQ').hidden=true;$('#kRes').hidden=false;
+  $('#kBars').innerHTML=[['활력 · 즐거움을 찾는 힘',J,'#c6f06a'],['탐닉 · 산만함과 회피',I,'#ff8a7a'],['절제 · 한 곳에 머무는 힘',R,'#3aa0c8']].map(([l,v,c])=>`<div class="bb"><div class="bl"><span>${l}</span><b style="color:${c}">${v}</b></div><div class="bt"><div style="background:${c}" data-w="${v}"></div></div></div>`).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$$('#kBars .bt div').forEach(d=>d.style.width=d.dataset.w+'%')));
+  $('#vTitle').textContent=v.t;$('#vTitle').style.color=v.c;$('#vSub').textContent=v.s;
+  $('#rx').innerHTML=rxList(J,I,R).map(t=>`<div>${t}</div>`).join('');
+  store.set('klast',{J,I,R,t:v.t,d:new Date().toLocaleDateString('ko-KR')});
+  $('#kShare').onclick=()=>copy(`[나비와 깊은 물 · 활력 계기판] ${v.t}\n활력 ${J} · 탐닉 ${I} · 절제 ${R}\n${v.s}\n${URL_}`);window.scrollTo(0,0);}
+$('#kStart').onclick=()=>{ki=0;ans=[];$('#kIntro').hidden=true;$('#kQ').hidden=false;kShow();};
+$('#kBack').onclick=()=>{if(ki>0){ki--;kShow();}};
+$('#kAgain').onclick=()=>{$('#kRes').hidden=true;$('#kIntro').hidden=false;kLast();};
+function kLast(){const l=store.get('klast',null);$('#kLast').textContent=l?`지난번(${l.d}): ${l.t} · 활력 ${l.J} 탐닉 ${l.I} 절제 ${l.R}`:'';}
+kLast();
+
+/* ===== 탭 ===== */
+$$('.tabs button').forEach(b=>b.onclick=()=>{$$('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['fish','focus','check','info'].forEach(t=>$('#tab-'+t).hidden=t!==b.dataset.tab);
+  if(b.dataset.tab!=='fish'&&G&&!G.over)gOver();window.scrollTo(0,0);});
+})();
+</script>
+</body>
+</html>
